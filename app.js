@@ -77,10 +77,10 @@ app.post("/login", async (request, response) => {
     if (user === undefined) {
       response.status(400);
       response.send("Invalid User");
-    } else if (user !== undefined || isPasswordMatched === false) {
+    } else if (user !== undefined && isPasswordMatched === false) {
       response.status(400);
       response.send("Invalid password");
-    } else if (user !== undefined || isPasswordMatched === true) {
+    } else if (user !== undefined && isPasswordMatched === true) {
       response.status(200);
       response.send("Login success");
     }
