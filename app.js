@@ -34,10 +34,15 @@ app.post("/register", async (request, response) => {
     //password lessthan
     let getUserDetails = `SELECT * FROM user WHERE username = '${username}';`;
     let dbUser = await db.get(getUserDetails);
-    let hashedPassword = await bcrypt.hash(password, 10);
+
     let passwordLength = password.length;
     if (dbUser === undefined) {
-      let createUserIntoDBQuery = `
+      if (request.body.password.length < 5) {
+        response.status(400);
+        response.send("Password is too short");
+      } else {
+        let hashedPassword = await bcrypt.hash(password, 10);
+        let createUserIntoDBQuery = `
             INSERT INTO 
                 user (username, name, password, gender, location)
                 VALUES (
@@ -47,14 +52,12 @@ app.post("/register", async (request, response) => {
                     '${gender}',
                     '${location}'
                 )`;
-      let dbUser = await db.run(createUserIntoDBQuery);
-      let userId = dbUser.lastID;
-      response.status(200);
-      response.send("User created successfully");
-    } else if (passwordLength < 5) {
-      response.status(400);
-      response.send("Password is too short");
-    } else if (dbUser !== undefined) {
+        let dbUser = await db.run(createUserIntoDBQuery);
+        let userId = dbUser.lastID;
+        response.status(200);
+        response.send("User created successfully");
+      }
+    } else {
       response.status(400);
       response.send("User already exists");
     }
@@ -77,12 +80,14 @@ app.post("/login", async (request, response) => {
     if (user === undefined) {
       response.status(400);
       response.send("Invalid User");
-    } else if (user !== undefined && isPasswordMatched === false) {
-      response.status(400);
-      response.send("Invalid password");
-    } else if (user !== undefined && isPasswordMatched === true) {
-      response.status(200);
-      response.send("Login success");
+    } else {
+      if (isPasswordMatched === false) {
+        response.status(400);
+        response.send("Invalid password");
+      } else {
+        response.status(200);
+        response.send("Login success");
+      }
     }
   } catch (e) {
     console.log(`DB Error: ${e.message}`);
@@ -98,12 +103,10 @@ app.put("/change-password", async (request, response) => {
     let user = await db.get(getUserDetails);
     let isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
 
-    let lengthOfNewPassword = newPassword.length;
-
     if (isPasswordMatched === false) {
       response.status(400);
       response.send("Invalid current password");
-    } else if (lengthOfNewPassword < 5) {
+    } else if (request.body.newPassword.length < 5) {
       response.status(400);
       response.send("Password is too short");
     } else if (isPasswordMatched === true) {
@@ -120,5 +123,3 @@ app.put("/change-password", async (request, response) => {
     console.log(`DB Error: ${e.message}`);
   }
 });
-
-
