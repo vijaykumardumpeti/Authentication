@@ -79,14 +79,14 @@ app.post("/login", async (request, response) => {
 
     if (user === undefined) {
       response.status(400);
-      response.send("Invalid User");
+      response.send("Invalid user");
     } else {
       if (isPasswordMatched === false) {
         response.status(400);
         response.send("Invalid password");
       } else {
         response.status(200);
-        response.send("Login success");
+        response.send("Login success!");
       }
     }
   } catch (e) {
@@ -110,11 +110,12 @@ app.put("/change-password", async (request, response) => {
       response.status(400);
       response.send("Password is too short");
     } else if (isPasswordMatched === true) {
+      let hashedPassword = await bcrypt.hash(newPassword, 10);
       let updatePasswordQuery = `
             UPDATE 
                 user 
             SET 
-                password = '${newPassword}';`;
+                password = '${hashedPassword}';`;
       await db.run(updatePasswordQuery);
       response.status(200);
       response.send("Password updated");
